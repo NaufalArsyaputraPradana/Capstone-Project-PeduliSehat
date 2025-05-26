@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { FaTimes } from 'react-icons/fa'
+import api from '../../services/api'
+import LoadingSpinner from '../common/LoadingSpinner'
 
 const SymptomTag = ({ text, onRemove }) => {
   return (
@@ -70,6 +72,7 @@ const DetectionForm = () => {
       'Segera konsultasikan ke dokter atau fasilitas kesehatan terdekat'
     ]
   })
+  const [error, setError] = useState(null)
 
   const handleSymptomSubmit = (e) => {
     e.preventDefault()
@@ -92,14 +95,20 @@ const DetectionForm = () => {
 
   const handleDetectionSubmit = () => {
     if (symptoms.length === 0) return
-    
     setIsLoading(true)
+    setError(null)
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      setShowResult(true)
-    }, 1500)
+    api.post('/predict', { symptoms, duration })
+      .then(data => {
+        setResult(data)
+        setShowResult(true)
+      })
+      .catch(err => {
+        setError(err.message || 'Gagal memprediksi')
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
   }
 
   return (
@@ -160,6 +169,8 @@ const DetectionForm = () => {
         >
           {isLoading ? 'Memproses...' : 'Deteksi Penyakit'}
         </button>
+        {isLoading && <LoadingSpinner />}
+        {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
       
       {showResult && result && (

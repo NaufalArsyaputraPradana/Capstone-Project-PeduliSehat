@@ -24,26 +24,28 @@ const ResultSection = ({ result, onClose }) => {
       </div>
       
       <div className="mb-5">
-        <h5 className="text-lg font-semibold text-text-primary mb-2">
-          Kemungkinan Penyakit: {result.disease}
-        </h5>
-        <p className="text-text-secondary leading-relaxed">
-          {result.description}
-        </p>
+        <h5 className="text-lg text-gray-800 mb-2">Kemungkinan Penyakit: {result.prediction}</h5>
+        {result.probabilities && (
+          <p className="text-sm text-gray-600">
+            Probabilitas: {result.probabilities.map((p, i) => (
+              <span key={i}>
+                {p.toFixed(2)}{i < result.probabilities.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </p>
+        )}
       </div>
       
-      <div className="bg-primary-light p-4 rounded-lg">
-        <h5 className="text-primary-dark font-semibold mb-3">
-          Rekomendasi Tindakan:
-        </h5>
-        <ul className="pl-5 space-y-2">
-          {result.recommendations.map((recommendation, index) => (
-            <li key={index} className="text-text-primary">
-              {recommendation}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {result.recommendations && (
+        <div className="bg-primary-light p-4 rounded-lg">
+          <h5 className="text-primary-dark mb-2">Rekomendasi Tindakan:</h5>
+          <ul className="pl-5">
+            {result.recommendations.map((recommendation, index) => (
+              <li key={index} className="mb-2 text-gray-800">{recommendation}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       
       <p className="italic text-xs text-text-secondary mt-4 text-center">
         *Hasil deteksi ini hanya bersifat prediksi awal. Konsultasikan dengan tenaga medis profesional untuk diagnosis yang akurat.
@@ -54,8 +56,8 @@ const ResultSection = ({ result, onClose }) => {
 
 ResultSection.propTypes = {
   result: PropTypes.shape({
-    disease: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
+    prediction: PropTypes.string.isRequired,
+    probabilities: PropTypes.arrayOf(PropTypes.number).isRequired,
     recommendations: PropTypes.arrayOf(PropTypes.string).isRequired
   }).isRequired,
   onClose: PropTypes.func.isRequired

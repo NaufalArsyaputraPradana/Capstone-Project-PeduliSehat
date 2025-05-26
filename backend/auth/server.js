@@ -4,24 +4,37 @@ import cors from "cors";
 import jwt from "jsonwebtoken";
 import bcrypt, { hash } from "bcrypt";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import morgan from "morgan";
+import predictRoute from "../routes/PredictRoute.js";
+import evaluationRoute from "../routes/EvaluationRoute.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
 const salt = 10;
+const jwtSecret = process.env.JWT_SECRET || 'jwt-secret-key';
 
 const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     methods: ["POST", "GET"],
     credentials: true,
   })
 );
 app.use(cookieParser());
+app.use(morgan("dev"));
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "user_auth",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "user_auth",
 });
 
 const verifyUser = (req, res, next) => {
@@ -29,7 +42,7 @@ const verifyUser = (req, res, next) => {
   if (!token) {
     return res.json({ Error: "You are not authenticated" });
   } else {
-    jwt.verify(token, "jwt-secret-key", (err, decoded) => {
+    jwt.verify(token, jwtSecret, (err, decoded) => {
       if (err) {
         return res.json({ Error: "Token is not ok" });
       } else {
@@ -68,7 +81,7 @@ app.post("/login", (req, res) => {
           if (err) return res.json({ Error: "Password compare error" });
           if (response) {
             const name = data[0].name;
-            const token = jwt.sign({ name }, "jwt-secret-key", {
+            const token = jwt.sign({ name }, jwtSecret, {
               expiresIn: "1d",
             });
             res.cookie("token", token);
@@ -89,8 +102,26 @@ app.get("/logout", (req, res) => {
   return res.json({ Status: "Success" });
 });
 
-app.listen(8081, () => {
-  console.log("Sudah Running yaa");
+// Mount ML prediction routes
+app.use("/api", predictRoute);
+// Mount ML evaluation results route
+app.use("/api", evaluationRoute);
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Serve React build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.resolve(__dirname, '../..', 'frontend', 'dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../..', 'frontend', 'dist', 'index.html'));
+  });
+}
+
+app.listen(process.env.PORT || 8081, () => {
+  console.log(`Server running on port ${process.env.PORT || 8081}`);
 });
 
 

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Base URL untuk API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // Membuat instance axios dengan konfigurasi default
 const api = axios.create({
@@ -9,6 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
 // Interceptor untuk handling token (jika diperlukan)

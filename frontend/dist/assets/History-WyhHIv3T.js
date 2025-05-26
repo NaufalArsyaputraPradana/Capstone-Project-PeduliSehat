@@ -1,0 +1,1 @@
+import{u as r,r as a,j as t}from"./index-Cq936XSB.js";function c({isLoggedIn:e}){const s=r();return console.log("isLoggedIn : ",e),a.useEffect(()=>{e||s("/",{replace:!0})},[e,s]),t.jsx("div",{className:"mt-20 h-screen",children:t.jsx("strong",{children:"RIWAYAT DETEKSI"})})}export{c as default};
